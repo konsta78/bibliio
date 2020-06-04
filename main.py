@@ -9,6 +9,8 @@
 
 from tkinter import *
 from tkinter.ttk import Combobox
+from tkinter import filedialog as fd
+import json
 import re
 
 from db import *
@@ -21,6 +23,34 @@ def create_main_window():
     """
     Создание основного окна программы
     """
+    def load_database():
+        file_name = fd.askopenfilename(filetypes=(("Database", "*.sqlite3"), ))
+        global db
+        if file_name:
+            db = connection_to_database(file_name)
+            but_m0.configure(state='normal')
+            but_m1.configure(state='normal')
+            but_m2.configure(state='normal')
+            but_m3.configure(state='normal')
+            but_m4.configure(state='normal')
+            but_m5.configure(state='normal')
+            but_m6.configure(state='normal')
+            text1.configure(state='normal')
+            text1.delete(1.0, 'end')
+            text1.insert('end', "База успешно загружена!")
+            text1.configure(state='disabled')
+
+    def save_database():
+        file_name = fd.asksaveasfilename(filetypes=(("Database", "*.json"), ))
+        with open(file_name, 'w') as f:
+            for item in read_all_from_db(db):
+                json.dump(item, f, indent=4)
+            f.close()
+        text1.configure(state='normal')
+        text1.delete(1.0, 'end')
+        text1.insert('end', f"База успешно сохранена в файле {file_name}!")
+        text1.configure(state='disabled')
+
     def show_welcome():
         """
         Отображение общей информации о библиотеке - кнопка 'В начало'
@@ -209,11 +239,16 @@ def create_main_window():
                       font='arial 16', width=10).grid(row=7, column=1, sticky=E, pady=5)
 
     def find_record():
-
+        """
+        Отображение доп. окна для поиска записи по базе данных
+        """
         def fr_exit():
             fr_window.destroy()
 
         def show_records_by_filter():
+            """
+            Вывод результатов сортировки записей
+            """
             text1.configure(state='normal')
             text1.delete(1.0, 'end')
             for item in select_record_by_filter(db, combo_name.get(), combo_author.get(), combo_genre.get()):
@@ -268,27 +303,34 @@ def create_main_window():
     label1 = Label(frame_top, text="Добро пожаловать в библиотеку!",
                    font='arial 20 bold', pady=10).pack()
     but_m0 = Button(frame_menu, text="В начало", activeforeground="blue",
-                    font='arial 16', width=12, command=show_welcome).pack()
+                    font='arial 16', width=12, command=show_welcome, state='disabled')
+    but_m0.pack()
     but_m1 = Button(frame_menu, text="Каталог", activeforeground="blue",
-                    font='arial 16', width=12, command=show_catalog).pack()
+                    font='arial 16', width=12, command=show_catalog, state='disabled')
+    but_m1.pack()
     but_m2 = Button(frame_menu, text="Добавить", activeforeground="blue",
-                    font='arial 16', width=12, command=new_record).pack()
+                    font='arial 16', width=12, command=new_record, state='disabled')
+    but_m2.pack()
     but_m3 = Button(frame_menu, text="Удалить", activeforeground="blue",
-                    font='arial 16', width=12, command=del_record).pack()
+                    font='arial 16', width=12, command=del_record, state='disabled')
+    but_m3.pack()
     but_m4 = Button(frame_menu, text="Редактировать", activeforeground="blue",
-                    font='arial 16', width=12, command=edit_record).pack()
+                    font='arial 16', width=12, command=edit_record, state='disabled')
+    but_m4.pack()
     but_m5 = Button(frame_menu, text="Поиск", activeforeground="blue",
-                    font='arial 16', width=12, command=find_record).pack()
-    but_m6 = Button(frame_menu, text="Сохранить", activeforeground="blue",
-                    font='arial 16', width=12, state='disabled').pack()
-    but_m7 = Button(frame_menu, text="Загрузить", activeforeground="blue",
-                    font='arial 16', width=12, state='disabled').pack()
+                    font='arial 16', width=12, command=find_record, state='disabled')
+    but_m5.pack()
+    but_m6 = Button(frame_menu, text="Сохранить", command=save_database, activeforeground="blue",
+                    font='arial 16', width=12, state='disabled')
+    but_m6.pack()
+    but_m7 = Button(frame_menu, text="Загрузить", command=load_database, activeforeground="blue",
+                    font='arial 16', width=12, state='normal')
+    but_m7.pack()
     but_m8 = Button(frame_menu, text="Выйти", command=bl_close, activeforeground="blue",
                     font='arial 16', width=12).pack(side=BOTTOM)
 
     text1 = Text(frame_main, wrap=WORD, font="arial 14", bg="lightgray")
     text1.pack()
-    show_welcome()
     return root
 
 
@@ -296,11 +338,13 @@ def bl_close():
     """
     Закрытие основного окна программы
     """
+    if db:
+        db.close()
     root.destroy()
 
 
 if __name__ == "__main__":
-    db = connection_to_database()
+    db = None
     root = create_main_window()
     root.mainloop()
-    db.close()
+

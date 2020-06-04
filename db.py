@@ -7,14 +7,13 @@ from sqlite3 import Error
 import random
 
 
-def connection_to_database():
+def connection_to_database(file_name):
     """
     Соединение с базой данных библиотеки
     :return: sqlite3.connect
     """
-
     try:
-        return sqlite3.connect('library_db')
+        return sqlite3.connect(file_name)
     except Error:
         print(Error)
 
