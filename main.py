@@ -42,14 +42,15 @@ def create_main_window():
 
     def save_database():
         file_name = fd.asksaveasfilename(filetypes=(("Database", "*.json"), ))
-        with open(file_name, 'w') as f:
-            for item in read_all_from_db(db):
-                json.dump(item, f, indent=4)
-            f.close()
-        text1.configure(state='normal')
-        text1.delete(1.0, 'end')
-        text1.insert('end', f"База успешно сохранена в файле {file_name}!")
-        text1.configure(state='disabled')
+        if file_name:
+            with open(file_name, 'w') as f:
+                for item in read_all_from_db(db):
+                    json.dump(item, f, indent=4)
+                f.close()
+            text1.configure(state='normal')
+            text1.delete(1.0, 'end')
+            text1.insert('end', f"База успешно сохранена в файле {file_name}!")
+            text1.configure(state='disabled')
 
     def show_welcome():
         """
